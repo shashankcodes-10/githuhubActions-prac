@@ -8,16 +8,19 @@ jobs:
       - name: cloning the code
         run: echo "code clone done"
   build:
+    needs: [code]
     runs-on: ubuntu-latest
     steps:
       - name: building the image
         run: echo "image build successfully"
   test:
+     needs: [build]
      runs-on: ubuntu-latest
      steps:
         - name: running test case
           run: echo "test done"
   deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: deploying code
