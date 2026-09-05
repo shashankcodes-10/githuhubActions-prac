@@ -1,0 +1,17 @@
+name: auto Linter # check the syntax.format,indentation
+
+on:
+  push:
+    paths: "*.py"
+  workflow_dispatch: 
+
+jobs:
+  code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout the code
+        uses: action/checkout@v7  # this will automatically clone
+
+      - name: install linter
+        run: pip install ruff #install the linting tool
+    
