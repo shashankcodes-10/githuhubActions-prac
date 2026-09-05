@@ -12,6 +12,11 @@ jobs:
       - name: checkout the code
         uses: actions/checkout@v7  # this will automatically clone
 
+      - name: Set up Python
+        uses: actions/setup-python@v5   # this will install python
+        with:
+          python-version: '3.11'   
+
       - name: install linter
         run: pip install ruff #install the linting tool
 
