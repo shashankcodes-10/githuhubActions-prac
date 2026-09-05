@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout the code
-        uses: action/checkout@v7  # this will automatically clone
+        uses: actions/checkout@v7  # this will automatically clone
 
       - name: install linter
         run: pip install ruff #install the linting tool
