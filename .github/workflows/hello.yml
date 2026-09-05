@@ -1,0 +1,9 @@
+name: shashank
+on:
+  workflow_dispatch:
+jobs:
+  simple-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: printing hello
+        run: echo "hello shashank"
