@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-    frontend:
+    frontend-linting:
       runs-on: ubuntu-latest
       steps:
        - name: code checkout
@@ -32,22 +32,8 @@ jobs:
          run: npm run test
          working-directory: frontend  
 
-       - name: docker login
-         uses: docker/login-action@v4
-         with:
-            username: ${{ vars.DOCKERHUB_USERNAME}}
-            password: ${{ secrets.DOCKERHUB_TOKEN}}
 
-       - name: docker build and push
-         uses: docker/build-push-action@v7
-         with:
-            context: ./frontend
-            push: true
-            tags: ${{ vars.DOCKERHUB_USERNAME}}/devboard-frontend-actions:latest
-
-
-
-    backend:
+    backend-linting:
       runs-on: ubuntu-latest
       steps:
        - name: code checkout
@@ -72,6 +58,15 @@ jobs:
          run: go test
          working-directory: backend
 
+
+
+    docker-build-and-push:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+            folder: [frontend,backend]
+      steps:
        - name: docker login
          uses: docker/login-action@v4
          with:
@@ -81,11 +76,13 @@ jobs:
        - name: docker build and push
          uses: docker/build-push-action@v7
          with:
-            context: ./backend
-            push: true
-            tags: ${{ vars.DOCKERHUB_USERNAME}}/devboard-backend-actions:latest
+           context: ${{ matrix.folder }}
+           push: true
+           tags: ${{ vars.DOCKERHUB_USERNAME}}/devboard-${{ matrix.folder }}-actions:latest
+
+
 
     deploy:
-      needs: [frontend,backend]
+      needs: [frontend-linting,backend-linting,docker-build-and-push]
       uses: ./.github/workflows/cd.yml
       secrets: inherit         
