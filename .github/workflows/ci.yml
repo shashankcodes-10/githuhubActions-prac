@@ -1,10 +1,9 @@
- #Goal: build the image for devboard frontend and push to docker hub
+ #Goal: build and test devboard 
 
 name: CI
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 jobs:
     frontend-linting:
