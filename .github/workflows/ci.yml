@@ -61,11 +61,12 @@ jobs:
 
 
     docker-build-and-push:
+      needs: [frontend-linting,backend-linting]
       runs-on: ubuntu-latest
       strategy:
         fail-fast: false
         matrix:
-            folder: [frontend,backend]
+            folder: ['./frontend','./backend']
       steps:
        - name: docker login
          uses: docker/login-action@v4
