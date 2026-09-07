@@ -23,6 +23,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
      - name: deployment   
-       run:
+       run: |
           docker compose pull
           docker compose up -d 
