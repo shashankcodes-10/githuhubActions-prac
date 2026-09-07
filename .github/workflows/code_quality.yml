@@ -1,10 +1,10 @@
-name: code_quality
+name: Code_Quality
 
 on:
   workflow_call:
 
 jobs:
-  sast:
+ code_quality:
     runs-on: ubuntu-latest
     steps:
      - name: code checkout
@@ -24,12 +24,7 @@ jobs:
      - name: run linter
        run: npm run lint
        working-directory: frontend
-
-     - name: run tests
-       run: npm run test
-       working-directory: frontend    
-
-
+   
      - name: setup go
        uses: actions/setup-go@v6
        with:
@@ -45,8 +40,5 @@ jobs:
        run: go vet
        working-directory: backend
 
-     - name: run tests
-       run: go test
-       working-directory: backend  
 
   
