@@ -13,4 +13,4 @@ on:
 jobs:
    continous-Integration-continous-Deployment:
      uses: ./.github/workflows/ci.yml  
-  
+     secrets: inherit
