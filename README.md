@@ -1,245 +1,232 @@
-# DevBoard — React + Vite Frontend
+# DevBoard — Advanced (React + Go + PostgreSQL)
 
-## 👨‍💻 My Docker Observations
+DevBoard is a full-stack task and project management application built with a React frontend, Go backend, and PostgreSQL database.
 
-I containerized this DevBoard frontend as part of my hands-on **Docker and DevOps learning**.
+The application uses real persistent database data instead of in-memory mock data.
 
-During the process, I experimented with both a **single-stage Docker build** and a **multi-stage Docker build** to understand their impact on the final image size.
+![DevBoard Application](./devboard.png)
 
-## 🐳 Docker Image Size Comparison
+## My Changes & Application Output
 
-| Docker Build | Image                                | Observed Size |
-| ------------ | ------------------------------------ | ------------: |
-| Single-stage | `shashank971/devboard-ui:latest`     |   **~735 MB** |
-| Multi-stage  | `shashank971/devboard-ui:multistage` |    **~93 MB** |
+| My Changes | Application Output |
+|---|---|
+| **Containerized the complete application stack** with React frontend, Go backend, and PostgreSQL database using Docker Compose. | ![DevBoard Application](./assets/devboard.png) |
+| **Implemented multi-stage Docker builds** for the frontend and backend to separate build dependencies from runtime images. | The application is running successfully with real project and task data loaded from PostgreSQL. |
+| **Used Docker Hardened Images (DHI)** for the Node.js and Go build/runtime stages where applicable. | Nginx serves the production React build and routes `/api/` requests to the Go backend. |
+| **Added Nginx reverse-proxy routing** between the React frontend and Go API. | React frontend, Go API, and PostgreSQL communicate through the Docker network. |
+| **Added PostgreSQL persistence and initialization** using Docker volumes and the `init/postgres/` SQL files. | Database-backed projects and tasks are displayed in the DevBoard UI. |
+| **Added environment-based configuration** for backend and PostgreSQL settings. | The stack is accessible through the frontend entry point on the configured host port. |
+| **Added container healthchecks** for PostgreSQL and backend readiness. | The application is shown in the screenshot above running as the completed full-stack version. |
 
-### 📊 Result
+## Architecture
 
-The multi-stage Docker build reduced the image size from approximately **735 MB to 93 MB**.
+Browser → Nginx → React frontend  
+                     ↓  
+                 Go backend → PostgreSQL
 
-That's a reduction of approximately:
+Nginx acts as the single entry point for the application. It serves the React production build and reverse-proxies `/api/` requests to the Go backend.
 
-> **📉 ~642 MB / ~87.3% smaller**
+## Project Components
 
-This experiment demonstrated an important Docker optimization principle:
+### Frontend
 
-> **The build environment doesn't need to be the runtime environment.**
+- React application built with Vite
+- Production assets generated during a multi-stage Docker build
+- Node.js is used only during the build stage
+- Nginx serves the final static React files
+- Nginx handles SPA routing so React routes continue to work after page refreshes
+- `/api/` requests are forwarded to the Go backend
 
-The single-stage image contains the Node.js environment, npm dependencies, source code, and development tooling.
+### Backend
 
-With the multi-stage approach, the application is built in a Node.js environment and only the required production files are included in the final runtime image.
+- Go REST API
+- Reads and writes project and task data in PostgreSQL
+- Provides a health endpoint
+- Runs as a compiled Go binary
+- Uses a multi-stage Docker build so the final image contains the application binary rather than the source and build dependencies
 
-### 🖥️ Application Output
+### Database
 
-The DevBoard application was successfully built and run through Docker.
+- PostgreSQL
+- Persistent Docker volume for database data
+- Initialization scripts create the database schema and load example data on the first database initialization
+- Database readiness is checked with a PostgreSQL healthcheck
 
-![DevBoard Application Output](./devboard-output.png)
+## Docker Setup
 
-The screenshot shows the DevBoard dashboard with:
+The project uses Docker Compose to run the complete application stack together.
 
-* Workspace overview
-* Project velocity
-* Task status cards
-* Projects section
-* Recent tasks
-* Dark-themed dashboard UI
+The Compose setup provides:
 
+- Frontend container
+- Backend container
+- PostgreSQL container
+- Shared Docker networking
+- Persistent PostgreSQL storage
+- Environment-based configuration
+- Service dependency management
+- Database healthcheck
+- Backend healthcheck
+- Nginx reverse proxy
 
-### 🔗 Docker Hub Images
+The frontend is exposed on port `8080` on the host.
 
-**Single-stage image:**
-[🐳 `shashank971/devboard-ui:latest`](https://hub.docker.com/repository/docker/shashank971/devboard-ui/general)
+The backend listens on port `8080` inside its container and is accessed through Nginx rather than being required to be publicly exposed.
 
-**Multi-stage image:**
-[🐳 `shashank971/devboard-ui:multistage`](https://hub.docker.com/repository/docker/shashank971/devboard-ui/general)
+PostgreSQL listens on its standard container port `5432`.
 
-You can pull the images using:
+## Docker Images
 
-```bash
-docker pull shashank971/devboard-ui:latest
-```
+The frontend uses a multi-stage build:
 
-```bash
-docker pull shashank971/devboard-ui:multistage
-```
+- Builder: Docker Hardened Node.js development image
+- Runner: Nginx Alpine image
 
+The backend uses a multi-stage build:
 
----
+- Builder: Docker Hardened Go Alpine image
+- Runner: Docker Hardened Go Alpine image
 
-## 🚀 Running the Docker Images
+Using multi-stage builds keeps build dependencies and source files out of the production frontend and keeps the backend runtime focused on the compiled application.
 
-### Single-stage image
+## Environment Configuration
 
-```bash
-docker run -p 5173:5173 shashank971/devboard-ui:latest
-```
+Runtime configuration is kept in `.env` and is based on the provided `.env.example` template.
 
-### Multi-stage image
+The main configuration values include:
 
-```bash
-docker run -p 5173:5173 shashank971/devboard-ui:multistage
-```
+- Frontend host port
+- Backend port
+- PostgreSQL username
+- PostgreSQL password
+- PostgreSQL database name
+- PostgreSQL connection URL
 
-Then open:
+The backend connects to PostgreSQL through the Docker Compose service name rather than `localhost`.
 
-```text
-http://localhost:5173
-```
+The PostgreSQL connection follows this structure:
 
-> **Note:** The image sizes mentioned above are the sizes I observed during my builds. Actual sizes can vary depending on the base image version, architecture, dependency versions, and Docker configuration.
+`postgres://USERNAME:PASSWORD@DATABASE_SERVICE:5432/DATABASE?sslmode=disable`
 
----
+This allows the backend container to communicate with the PostgreSQL container through Docker's internal network.
 
-# Project Overview
+## Database Persistence
 
-DevBoard is a modern task and project management frontend built with React and Vite. It provides a dashboard-style interface for viewing projects, tasks, progress, and task statuses.
+PostgreSQL data is stored in a named Docker volume so that removing and recreating containers does not automatically remove the database data.
 
-## ✨ Features
+The project also contains PostgreSQL initialization files under `init/postgres/`.
 
-* Modern DevBoard dashboard UI
-* Project overview
-* Task management interface
-* Kanban board components
-* Task creation modal
-* Project detail pages
-* Search/command bar
-* Theme toggle
-* Responsive layout
-* API integration through a small `fetch` wrapper
-* React Router based navigation
-* React Query for server-state management
-* Component tests using Vitest and Testing Library
-
-## 🛠️ Tech Stack
-
-| Component     | Technology               |
-| ------------- | ------------------------ |
-| Frontend      | React 18                 |
-| Build Tool    | Vite                     |
-| Runtime       | Node.js 22               |
-| Styling       | Tailwind CSS             |
-| Routing       | React Router             |
-| Data Fetching | TanStack React Query     |
-| Icons         | Tabler Icons             |
-| Testing       | Vitest + Testing Library |
-| Container     | Docker                   |
-| Base Image    | `node:22-alpine`         |
+These scripts are used by PostgreSQL during the first initialization of a new database volume to create the required schema and load example data.
 
-## 📁 Project Structure
+## API
 
-```text
-devboard-ui/
-├── public/
-├── src/
-│   ├── api/
-│   │   └── client.js
-│   ├── components/
-│   │   ├── layout/
-│   │   ├── tasks/
-│   │   └── ui/
-│   ├── hooks/
-│   │   └── useTasks.js
-│   ├── pages/
-│   │   ├── DashboardPage.jsx
-│   │   └── ProjectPage.jsx
-│   ├── styles/
-│   ├── test/
-│   ├── App.jsx
-│   └── main.jsx
-├── .dockerignore
-├── Dockerfile
-├── Dockerfile-multi
-├── package.json
-├── package-lock.json
-├── tailwind.config.js
-├── vite.config.js
-└── index.html
-```
+The frontend communicates with the backend through the `/api/` path.
 
-## ⚙️ Local Development
+The backend provides endpoints for:
 
-Install dependencies:
+- Listing projects
+- Creating projects
+- Listing tasks for a project
+- Creating tasks
+- Updating tasks
+- Searching tasks
+- Backend health status
 
-```bash
-npm install
-```
+The browser communicates with the frontend through Nginx, while Nginx forwards API traffic to the backend over the Docker network.
 
-Start the development server:
+## Healthchecks
 
-```bash
-npm run dev
-```
+Healthchecks are used to make the stack more reliable during startup.
 
-The application runs on:
+### PostgreSQL
 
-```text
-http://localhost:5173
-```
+PostgreSQL readiness is checked using its built-in `pg_isready` utility.
 
-## 🧪 Testing
+### Backend
 
-Run the test suite with:
+The Go API exposes a health endpoint that can be used to verify that the backend is running.
 
-```bash
-npm test
-```
+### Frontend
 
-## 🔍 Linting
+Nginx is configured as the production frontend server. A separate healthcheck is optional because successful Nginx startup provides a basic runtime check for this project.
 
-Run ESLint with:
+## Running the Project
 
-```bash
-npm run lint
-```
+### Requirements
 
-## 🔗 API / Backend
+Only Docker with Docker Compose is required.
 
-The frontend contains an API client and Vite proxy configuration for communicating with a Go backend.
+Node.js, Go, and PostgreSQL do not need to be installed locally because they run inside containers.
 
-For local development, `/api` requests are proxied to:
+### Start
 
-```text
-http://localhost:8080
-```
+Create the local `.env` file from the example configuration and start the application with Docker Compose.
 
-For Vite preview/Compose usage, the proxy is configured to communicate with a backend service named:
+After the containers are running, open the frontend at:
 
-```text
-backend:8080
-```
+`http://localhost:8080`
 
-## 📌 Docker Learning Takeaway
+The backend health endpoint is available through the backend service for health verification.
 
-This project demonstrated the significant impact that **multi-stage Docker builds** can have on image size.
+### Stop
 
-### Before
+Stop the Compose stack when finished.
 
-**Single-stage: ~735 MB**
+### Reset Database
 
-### After
+The database can be reset by removing the PostgreSQL volume and starting the stack again. This causes the initialization scripts to run again and recreates the example database state.
 
-**Multi-stage: ~93 MB**
+## Folder Structure
 
-That's approximately an **87.3% reduction** in image size.
+- `docker-compose.yml` — runs the complete application stack
+- `Makefile` — provides convenient project commands
+- `.env.example` — environment configuration template
+- `frontend/` — React/Vite frontend and Nginx configuration
+- `backend/` — Go API and backend Dockerfile
+- `init/postgres/` — PostgreSQL schema and seed initialization files
+- `assets/` — project screenshots
 
-The main reason for this reduction is that the final image does not need the complete Node.js development environment, npm tooling, and build-time dependencies.
+## DevSecOps / CI/CD
 
-The application is built in one stage, and only the required production files are carried into the final runtime image.
+The repository includes GitHub Actions workflows for:
 
-### Key Takeaway
+- SonarQube static application security testing
+- OWASP ZAP dynamic application security testing
+- Docker image build and push automation
 
-> **Build with a full environment, but run with only what the application needs.**
+### SonarQube
 
-Multi-stage builds are therefore an effective way to reduce Docker image size, improve security, and minimize unnecessary components in production containers.
+A self-hosted SonarQube instance can be used for source-code analysis.
 
----
+The GitHub Actions workflow uses repository configuration for the SonarQube host and authentication token.
 
-# Original Project / Author
+### Docker Hub
 
-This project was originally taken from **Shubham Londhe**.
+The CI pipeline can build and push the application images to Docker Hub.
 
-**Author / source repository:**
+Docker Hub credentials should be stored as GitHub Actions secrets and variables rather than committed to the repository.
 
-https://github.com/LondheShubham153
+## What This Project Demonstrates
 
-The Dockerization, multi-stage optimization, image-size comparison, and observations in this README are my own hands-on work.
+This project demonstrates a production-oriented containerized full-stack application with:
+
+- React frontend
+- Go REST API
+- PostgreSQL database
+- Docker multi-stage builds
+- Docker Compose
+- Docker networking
+- Nginx reverse proxy
+- API routing
+- Persistent database volumes
+- Environment-based configuration
+- Container healthchecks
+- Docker Hardened Images
+- CI/CD security scanning
+- Docker image publishing
+
+## Application Screenshot
+
+The screenshot below shows the DevBoard application running with real project and task data loaded from PostgreSQL.
+
+![DevBoard running application](./assets/devboard.png)
