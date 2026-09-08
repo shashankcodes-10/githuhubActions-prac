@@ -22,3 +22,6 @@ jobs:
   sonar_scan:
     uses: ./.github/workflows/sonar_scan.yml 
     secrets: inherit
+
+  code_test:
+    uses: ./.github/workflows/code_test.yml 
