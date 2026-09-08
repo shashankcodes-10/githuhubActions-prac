@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-
+ #------------CI-----------------------------------
   code_quality:
    uses: ./.github/workflows/code_quality.yml
 
@@ -17,4 +17,8 @@ jobs:
 
   docker_scan:
     uses: ./.github/workflows/docker_scan.yml 
+    secrets: inherit
+
+  sonar_scan.yml:
+    uses: ./.github/workflows/sonar_scan.yml 
     secrets: inherit
