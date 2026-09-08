@@ -7,7 +7,7 @@ jobs:
   docker_file_lint_and_scan:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: fail
+      fail-fast: false
       matrix:
         folder: ['frontend','backend']
     steps:
@@ -25,9 +25,9 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME}}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: docker build  ${{ matrix.folder } image
+      - name: docker build  ${{ matrix.folder }} image
         run: docker build -t ${{ vars.DOCKERHUB_USERNAME }}/devboard-${{ matrix.folder }}:latest .
-        workking-directory: ${{ matrix.folder }}
+        working-directory: ${{ matrix.folder }}
 
       - name: Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
