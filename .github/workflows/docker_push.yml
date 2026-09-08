@@ -1,11 +1,10 @@
-name: Docker Push
+name: docker_push
 
 on: 
     workflow_call:
 
 jobs:
     docker-build-and-push:
-      needs: [frontend-linting,backend-linting]
       runs-on: ubuntu-latest
       strategy:
         fail-fast: false
