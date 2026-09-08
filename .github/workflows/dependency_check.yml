@@ -1,10 +1,10 @@
-name: Dependecy check
+name: dependency_check
 
 on:
     workflow_call:
 
 jobs:
-  dependency-check:
+  dependency_check:
     runs-on: ubuntu-latest
     steps:
       - name: Code Checkout
