@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  OWASP ZAP DAST Scan:
+  OWASP_ZAP_DAST_Scan:
     runs-on: ubuntu-latest
     steps:
       - name: Code Checkout
